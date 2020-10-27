@@ -31,11 +31,21 @@ int1 = digitalio.DigitalInOut(board.ACCELEROMETER_INTERRUPT)
 lis3dh = adafruit_lis3dh.LIS3DH_I2C(i2c, address=0x19, int1=int1)
 
 
-# --- Display setup ---
+# Display setup
 
 matrix = Matrix()
 display = matrix.display
 #network = Network(status_neopixel=board.NEOPIXEL, debug=False)
+
+# Buttons setup
+
+button_a = digitalio.DigitalInOut(board.BUTTON_UP)
+button_a.direction = digitalio.Direction.INPUT
+button_a.pull = digitalio.Pull.UP
+
+button_b = digitalio.DigitalInOut(board.BUTTON_DOWN)
+button_b.direction = digitalio.Direction.INPUT
+button_b.pull = digitalio.Pull.UP
 
 
 def get_angle():
@@ -66,7 +76,7 @@ def collision(a, b):
 
 
 def reinit_maze(x, y):
-
+    global goal_position
     for i in range(0,10):
         for j in range(0,5):
             maze[i,j] = 1
@@ -74,9 +84,9 @@ def reinit_maze(x, y):
 
     goal_group.hidden = True
 
-    start_pos, goal_pos = generate_maze(start_x=x, start_y=y)
-    goal_tilegrid.x = goal_pos[0]*6 + 3
-    goal_tilegrid.y = goal_pos[1]*6 + 2
+    start_pos, goal_position = generate_maze(start_x=x, start_y=y)
+    goal_tilegrid.x = goal_position[0]*6 + 3
+    goal_tilegrid.y = goal_position[1]*6 + 2
     goal_group.hidden = False
 
 
@@ -84,7 +94,7 @@ def reinit_maze(x, y):
 
 
 def generate_maze(start_x=None, start_y=None):
-    global max_depth, goal_x, goal_y, vis
+    global max_depth, goal_x, goal_y, vis, solution_path
     w = 10
     h = 5
     max_depth = 0
@@ -94,7 +104,7 @@ def generate_maze(start_x=None, start_y=None):
     vis = [[0] * w + [1] for _ in range(h)] + [[1] * (w + 1)]
     path = []
     def walk(x, y, depth):
-        global max_depth, goal_x, goal_y
+        global max_depth, goal_x, goal_y, solution_path
         path.append((x,y))
         while len(path)>0:
             move = False
@@ -102,6 +112,7 @@ def generate_maze(start_x=None, start_y=None):
                 max_depth = depth
                 goal_x = x
                 goal_y = y
+                solution_path = path.copy()
             if vis[y][x] != 1 :
                 path.append((x,y))
                 vis[y][x] = 1
@@ -160,6 +171,21 @@ def generate_maze(start_x=None, start_y=None):
     goal = (goal_x, goal_y)
     print(start, goal, max_depth)
     return start, goal
+
+def change_color():
+    global ball_palette, curent_theme, color_themes, rect1, rect2, rect3
+    print("color change trigered !")
+    curent_theme += 1
+    if curent_theme >= len(color_themes):
+        curent_theme = 0
+    ball_palette[0] = color_themes[curent_theme][0]
+    maze_palette[1] = color_themes[curent_theme][1]
+    rect1.fill = color_themes[curent_theme][1]
+    rect2.fill = color_themes[curent_theme][1]
+    rect3.fill = color_themes[curent_theme][1]
+    goal_palette[0] = color_themes[curent_theme][2]
+    goal_palette[1] = color_themes[curent_theme][3]
+    time.sleep(0.5)
 
 # graphical init
 
@@ -230,6 +256,7 @@ display.show(group)
 
 print("Maze time! Find the exit...")
 
+solution_path = []
 start_position, goal_position = generate_maze()
 
 # Start position for the ball
@@ -244,7 +271,72 @@ goal_tilegrid.x = goal_position[0]*6 + 3
 goal_tilegrid.y = goal_position[1]*6 + 2
 goal_group.hidden = False
 
+
+# buttons
+but_a = True
+but_b = True
+
+# Demo mode (toggled by the UP button)
+
+demo = False
+
+# Color themes
+
+curent_theme = 0
+# ball, walls, goal center, goal periph
+# original, dark
+color_themes = [[0x139913,0xdb4242,0xf364bd,0x3fc2ea],[0x0000CC,0x400040,0xC00000,0x400000]]
+
+
+
 while True:
+    # buttons press check
+    if button_a.value == False and but_a:
+        #but_a pressed
+        but_a = False
+
+    if button_a.value and but_a == False:
+        #but_a released
+        but_a = True
+        if demo:
+            demo = False
+            print("demo mode deactivated")
+        else:
+            demo = True
+            print("demo mode activated")
+
+    if button_b.value == False and but_b:
+        #but_b pressed
+        but_b = False
+
+    if button_b.value and but_b == False:
+        #but_b released
+        but_b = True
+        change_color()
+
+
+    # Ball collision with goal.
+    if collision(ball, goal_tilegrid):
+        ball.x = goal_tilegrid.x+1
+        ball.y = goal_tilegrid.y+1
+        reinit_maze(grid_x[0], grid_y[0])
+        continue
+
+    if demo:
+        if len(solution_path) == 0:
+            ball.x = goal_tilegrid.x+1
+            ball.y = goal_tilegrid.y+1
+            reinit_maze(goal_position[0], goal_position[1])
+            continue
+        print(solution_path)
+        print(4 + solution_path[0][0] * 6)
+        print(3 + solution_path[0][1] * 6)
+        ball.x = 4 + solution_path[0][0] * 6
+        ball.y = 3 + solution_path[0][1] * 6
+        solution_path.pop(0)
+        time.sleep(0.5)
+        continue
+
     # accelerometer values
     angle, z = get_angle()
     grid_x = []
@@ -259,12 +351,6 @@ while True:
     else:
         grid_y = [ball.y // 6, (ball.y+2) // 6]
 
-    # Ball collision with goal.
-    if collision(ball, goal_tilegrid):
-        ball.x = goal_tilegrid.x+1
-        ball.y = goal_tilegrid.y+1
-        reinit_maze(grid_x[0], grid_y[0])
-        pass
 
 
     # moving the ball
