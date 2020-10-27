@@ -17,4 +17,9 @@ A little maze game for MatrixPortal M4 with a 64x32 RGB matrix, driven by the ac
 * adafruit_imageload
 * adafruit_lis3dh
 
+## Buttons
+
+* UP : toggle demo mode. default : off
+* DOWN : change color theme.
+
 
