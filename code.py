@@ -1,4 +1,13 @@
-# Marius 450
+############
+############
+##
+## Maze for 64x32 RGB matrix and matrixportal M4 from Adafruit
+##
+## By Marius_450
+## Based on https://github.com/Marius-450/Maze_CP
+##
+############
+############
 
 import time
 import math
@@ -7,17 +16,12 @@ import board
 import displayio
 import adafruit_display_text.label
 from adafruit_display_shapes.rect import Rect
-from adafruit_display_shapes.polygon import Polygon
-from adafruit_bitmap_font import bitmap_font
-#from adafruit_matrixportal.network import Network
 from adafruit_matrixportal.matrix import Matrix
-
 import adafruit_imageload
 
-
 import busio
-import adafruit_lis3dh
 import digitalio
+import adafruit_lis3dh
 
 
 # setup for accelerometer
