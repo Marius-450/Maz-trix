@@ -76,20 +76,19 @@ def collision(a, b):
 
 
 def reinit_maze(x, y):
-    global goal_position
+    global goal_position, start_position
     for i in range(0,10):
         for j in range(0,5):
             maze[i,j] = 1
             time.sleep(0.01)
-
     goal_group.hidden = True
-
-    start_pos, goal_position = generate_maze(start_x=x, start_y=y)
+    start_position, goal_position = generate_maze(start_x=x, start_y=y)
     goal_tilegrid.x = goal_position[0]*6 + 3
     goal_tilegrid.y = goal_position[1]*6 + 2
+    ball.x = start_position[0]*6 + 4
+    ball.y = start_position[1]*6 + 3
+    print('ball position after generation :', ball.x, ball.y)
     goal_group.hidden = False
-
-
     return True
 
 
@@ -249,8 +248,8 @@ group.append(maze_group)
 group.append(rect1)
 group.append(rect2)
 group.append(rect3)
-group.append(ball_group)
 group.append(goal_group)
+group.append(ball_group)
 
 display.show(group)
 
@@ -261,9 +260,11 @@ start_position, goal_position = generate_maze()
 
 # Start position for the ball
 
-ball.x = start_position[0]*6
+ball.x = start_position[0]*6 + 4
 ball.y = start_position[1]*6 + 3
+
 ball_group.hidden = False
+
 
 # Goal position
 
@@ -287,7 +288,7 @@ curent_theme = 0
 # original, dark
 color_themes = [[0x139913,0xdb4242,0xf364bd,0x3fc2ea],[0x0000CC,0x400040,0xC00000,0x400000]]
 
-
+print('ball position pre game :', ball.x, ball.y)
 
 while True:
     # buttons press check
@@ -319,7 +320,7 @@ while True:
     if collision(ball, goal_tilegrid):
         ball.x = goal_tilegrid.x+1
         ball.y = goal_tilegrid.y+1
-        reinit_maze(grid_x[0], grid_y[0])
+        reinit_maze(goal_position[0], goal_position[1])
         continue
 
     if demo:
@@ -328,9 +329,6 @@ while True:
             ball.y = goal_tilegrid.y+1
             reinit_maze(goal_position[0], goal_position[1])
             continue
-        print(solution_path)
-        print(4 + solution_path[0][0] * 6)
-        print(3 + solution_path[0][1] * 6)
         ball.x = 4 + solution_path[0][0] * 6
         ball.y = 3 + solution_path[0][1] * 6
         solution_path.pop(0)
@@ -376,6 +374,8 @@ while True:
     local_x = ball.x - 3 - grid_x[0]*6
     local_y = ball.y - grid_y[0]*6
     # North distance
+    print('ball position :', ball.x, ball.y)
+    print(grid_x, grid_y)
     if maze[grid_x[0],grid_y[0]] < 2:
         distances[0] = local_y - 2
     else:
