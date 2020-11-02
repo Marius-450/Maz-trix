@@ -27,5 +27,9 @@ A little maze game for MatrixPortal M4 with a 64x32 RGB matrix, driven by the ac
 After 5 minutes of inactivity, demo mode is activated.
 During demo mode, moving the matrix deactivate the demo mode.
 
+## Todo
 
+* Use nvm to store config : demo mode, color theme.
+* Change color theme randomly in demo mode.
+* Animate the goal and the ball.
 
