@@ -77,16 +77,16 @@ def collision(a, b):
 
 def reinit_maze(x, y):
     global goal_position, start_position
-    for i in range(0,10):
-        for j in range(0,5):
+    for i in range(0,12):
+        for j in range(0,6):
             maze[i,j] = 1
             time.sleep(0.01)
     goal_group.hidden = True
     start_position, goal_position = generate_maze(start_x=x, start_y=y)
-    goal_tilegrid.x = goal_position[0]*6 + 3
-    goal_tilegrid.y = goal_position[1]*6 + 2
-    ball.x = start_position[0]*6 + 4
-    ball.y = start_position[1]*6 + 3
+    goal_tilegrid.x = goal_position[0]*5 + 3
+    goal_tilegrid.y = goal_position[1]*5 + 1
+    ball.x = start_position[0]*5 + 4
+    ball.y = start_position[1]*5 + 2
     print('ball position after generation :', ball.x, ball.y)
     goal_group.hidden = False
     return True
@@ -94,8 +94,8 @@ def reinit_maze(x, y):
 
 def generate_maze(start_x=None, start_y=None):
     global max_depth, goal_x, goal_y, vis, solution_path
-    w = 10
-    h = 5
+    w = 12
+    h = 6
     max_depth = 0
     goal_x = 0
     goal_y = 0
@@ -118,7 +118,7 @@ def generate_maze(start_x=None, start_y=None):
             d = [(x - 1, y), (x, y + 1), (x + 1, y), (x, y - 1)]
             shuffle(d)
             for (xx, yy) in d:
-                if xx > 9 or yy > 4: continue
+                if xx > 11 or yy > 5: continue
                 if vis[yy][xx]: continue
                 move = True
                 if xx == x:
@@ -161,20 +161,23 @@ def generate_maze(start_x=None, start_y=None):
                 print("moving back to", x, y)
 
     if start_x == None:
-        start_x = randint(0,9)
+        start_x = randint(0,12)
 
     if start_y == None:
-        start_y = randint(0,4)
+        start_y = randint(0,6)
     start = (start_x, start_y)
     walk(start_x, start_y, 1)
     goal = (goal_x, goal_y)
     print(start, goal, max_depth)
     return start, goal
 
-def change_color():
+def change_color(n=None):
     global ball_palette, curent_theme, color_themes, rect1, rect2, rect3
     print("color change trigered !")
-    curent_theme += 1
+    if n is not None:
+        curent_theme = n
+    else:
+        curent_theme += 1
     if curent_theme >= len(color_themes):
         curent_theme = 0
     ball_palette[0] = color_themes[curent_theme][0]
@@ -189,15 +192,15 @@ def change_color():
 # graphical init
 
 # Maze
-maze_sprite_sheet, maze_palette = adafruit_imageload.load("/Maze_tiles_matrix.bmp",
+maze_sprite_sheet, maze_palette = adafruit_imageload.load("/Maze_tiles_matrix_5x5.bmp",
                                                 bitmap=displayio.Bitmap,
                                                 palette=displayio.Palette)
 
 maze = displayio.TileGrid(maze_sprite_sheet, pixel_shader=maze_palette,
-                            width = 10,
-                            height = 5,
-                            tile_width = 6,
-                            tile_height = 6,
+                            width = 12,
+                            height = 6,
+                            tile_width = 5,
+                            tile_height = 5,
                             default_tile = 1)
 
 maze_group = displayio.Group()
@@ -206,9 +209,9 @@ maze_group.x = 3
 
 # Walls
 
-rect1 = Rect(0, 0, 3, 32, fill=0xdb4242)
-rect2 = Rect(3, 30, 60, 2, fill=0xdb4242)
-rect3 = Rect(63, 0, 1, 32, fill=0xdb4242)
+rect1 = Rect(0, 0, 3, 32, fill=maze_palette[1])
+rect2 = Rect(3, 30, 60, 2, fill=maze_palette[1])
+rect3 = Rect(63, 0, 1, 32, fill=maze_palette[1])
 
 # Goal
 
@@ -260,16 +263,16 @@ start_position, goal_position = generate_maze()
 
 # Start position for the ball
 
-ball.x = start_position[0]*6 + 4
-ball.y = start_position[1]*6 + 3
+ball.x = start_position[0]*5 + 4
+ball.y = start_position[1]*5 + 2
 
 ball_group.hidden = False
 
 
 # Goal position
 
-goal_tilegrid.x = goal_position[0]*6 + 3
-goal_tilegrid.y = goal_position[1]*6 + 2
+goal_tilegrid.x = goal_position[0]*5 + 3
+goal_tilegrid.y = goal_position[1]*5 + 1
 goal_group.hidden = False
 
 
@@ -285,10 +288,9 @@ demo = False
 
 curent_theme = 0
 # ball, walls, goal center, goal periph
-# original, dark
-color_themes = [[0x139913,0xdb4242,0xf364bd,0x3fc2ea],[0x0000CC,0x400040,0xC00000,0x400000]]
-
-print('ball position pre game :', ball.x, ball.y)
+# original blue, dark, pink
+color_themes = [[0x139913,0x108ec4,0xf364bd,0x000040],[0x0000CC,0x400040,0xC00000,0x400000],[0x139913,0xdb4242,0xf364bd,0x3fc2ea]]
+change_color(0)
 
 while True:
     # buttons press check
@@ -329,8 +331,8 @@ while True:
             ball.y = goal_tilegrid.y+1
             reinit_maze(goal_position[0], goal_position[1])
             continue
-        ball.x = 4 + solution_path[0][0] * 6
-        ball.y = 3 + solution_path[0][1] * 6
+        ball.x = 4 + solution_path[0][0] * 5
+        ball.y = 2 + solution_path[0][1] * 5
         solution_path.pop(0)
         time.sleep(0.5)
         continue
@@ -340,14 +342,14 @@ while True:
     grid_x = []
     grid_y = []
 
-    if (ball.x-3)// 6 == (ball.x-2)// 6:
-        grid_x = [(ball.x-3)// 6]
+    if (ball.x-3)// 5 == (ball.x-2)// 5:
+        grid_x = [(ball.x-3)// 5]
     else:
-        grid_x = [(ball.x-3)// 6, (ball.x-2)// 6]
-    if ball.y // 6 == (ball.y+2) // 6:
-        grid_y = [ball.y // 6]
+        grid_x = [(ball.x-3)// 5, (ball.x-2)// 5]
+    if ball.y // 5 == (ball.y+1) // 5:
+        grid_y = [ball.y // 5]
     else:
-        grid_y = [ball.y // 6, (ball.y+2) // 6]
+        grid_y = [ball.y // 5, (ball.y+1) // 5]
 
 
 
@@ -371,17 +373,15 @@ while True:
     # distances = [N, E, S, W] in pixels
     distances = [0,0,0,0]
     # relative position of the ball in the cell
-    local_x = ball.x - 3 - grid_x[0]*6
-    local_y = ball.y - grid_y[0]*6
+    local_x = ball.x - 3 - grid_x[0]*5
+    local_y = ball.y - grid_y[0]*5
     # North distance
-    print('ball position :', ball.x, ball.y)
-    print(grid_x, grid_y)
     if maze[grid_x[0],grid_y[0]] < 2:
-        distances[0] = local_y - 2
+        distances[0] = local_y - 1
     else:
         if maze[grid_x[0],grid_y[0]] == 2:
             if local_x > 4:
-                distances[0] = local_y - 2
+                distances[0] = local_y - 1
             else:
                 distances[0] = 12
         else:
@@ -389,30 +389,31 @@ while True:
 
     # East distance
     if maze[grid_x[0],grid_y[0]] % 2 == 1:
-        distances[1] =  6 - local_x - 4
+        distances[1] =  5 - local_x - 3
     else:
         if maze[grid_x[0],grid_y[0]] == 2:
-            if local_y < 2:
-                distances[1] =  6 - local_x - 4
+            if local_y < 1:
+                distances[1] =  5 - local_x - 3
+                #distances[1] = 12
             else:
                 distances[1] = 12
         else:
             distances[1] = 12
 
     # South distance
-    if grid_y[0] < 4:
+    if grid_y[0] < 5:
         if local_x > 4:
-            distances[2] = 4 - local_y
+            distances[2] = 3 - local_y
         else:
             if  maze[grid_x[0],grid_y[0]+1] < 2:
-                distances[2] = 4 - local_y
+                distances[2] = 3 - local_y
             else :
                 distances[2] = 12
     else:
-        distances[2] = 4 - local_y
+        distances[2] = 3 - local_y
     # West distance
     if grid_x[0] > 0:
-        if local_y < 2:
+        if local_y < 1:
             distances[3] = local_x
         else:
             if maze[grid_x[0]-1,grid_y[0]] % 2 == 1:
