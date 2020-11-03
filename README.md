@@ -1,6 +1,6 @@
 # Maz-trix
 A little maze game for MatrixPortal M4 with a 64x32 RGB matrix, driven by the accelerometer.
-
+<img src="https://raw.githubusercontent.com/Marius-450/screenshots/master/DSCF1901.JPG" width="450" align="right">
 
 ## Requirements 
 
@@ -16,6 +16,7 @@ A little maze game for MatrixPortal M4 with a 64x32 RGB matrix, driven by the ac
 * adafruit_matrixportal
 * adafruit_imageload
 * adafruit_lis3dh
+<img src="https://raw.githubusercontent.com/Marius-450/screenshots/master/maztrix.1.gif" align="right">
 
 ## Buttons
 
