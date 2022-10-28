@@ -53,7 +53,12 @@ lis3dh = adafruit_lis3dh.LIS3DH_I2C(i2c, address=0x19, int1=int1)
 
 # Display setup
 
-matrix = Matrix()
+WIDTH = 64
+WIDTH_GRID = 12
+HEIGHT = 32 # 64
+HEIGHT_GRID = 6 # 12
+
+matrix = Matrix(width=WIDTH, height=HEIGHT)
 display = matrix.display
 
 # Buttons setup
@@ -107,8 +112,8 @@ def collision(a, b):
 
 def reinit_maze(x, y):
     global goal_position, start_position
-    for i in range(0,12):
-        for j in range(0,6):
+    for i in range(0,WIDTH_GRID):
+        for j in range(0,HEIGHT_GRID):
             maze[i,j] = 1
             time.sleep(0.01)
     goal_group.hidden = True
@@ -123,8 +128,8 @@ def reinit_maze(x, y):
 
 def generate_maze(start_x=None, start_y=None):
     global max_depth, goal_x, goal_y, vis, solution_path
-    w = 12
-    h = 6
+    w = WIDTH_GRID
+    h = HEIGHT_GRID
     max_depth = 0
     goal_x = 0
     goal_y = 0
@@ -147,7 +152,7 @@ def generate_maze(start_x=None, start_y=None):
             d = [(x - 1, y), (x, y + 1), (x + 1, y), (x, y - 1)]
             shuffle(d)
             for (xx, yy) in d:
-                if xx > 11 or yy > 5: continue
+                if xx > w-1 or yy > h-1: continue
                 if vis[yy][xx]: continue
                 move = True
                 if xx == x:
@@ -190,10 +195,10 @@ def generate_maze(start_x=None, start_y=None):
                 #print("moving back to", x, y)
 
     if start_x == None:
-        start_x = randint(0,11)
+        start_x = randint(0,w-1)
 
     if start_y == None:
-        start_y = randint(0,5)
+        start_y = randint(0,h-1)
     start = (start_x, start_y)
     walk(start_x, start_y, 1)
     goal = (goal_x, goal_y)
@@ -224,8 +229,8 @@ maze_sprite_sheet, maze_palette = adafruit_imageload.load("/Maze_tiles_matrix_5x
                                                 bitmap=displayio.Bitmap,
                                                 palette=displayio.Palette)
 maze = displayio.TileGrid(maze_sprite_sheet, pixel_shader=maze_palette,
-                            width = 12,
-                            height = 6,
+                            width = WIDTH_GRID,
+                            height = HEIGHT_GRID,
                             tile_width = 5,
                             tile_height = 5,
                             default_tile = 1)
@@ -234,10 +239,10 @@ maze_group.append(maze)
 maze_group.x = 3
 
 # Outer walls
-
-rect1 = Rect(0, 0, 3, 32, fill=maze_palette[1])
-rect2 = Rect(3, 30, 60, 2, fill=maze_palette[1])
-rect3 = Rect(63, 0, 1, 32, fill=maze_palette[1])
+H_OFF = HEIGHT - (HEIGHT_GRID * 5)
+rect1 = Rect(0, 0, 3, HEIGHT, fill=maze_palette[1])
+rect2 = Rect(3, HEIGHT-H_OFF, WIDTH-4, H_OFF, fill=maze_palette[1])
+rect3 = Rect(WIDTH-1, 0, 1, HEIGHT, fill=maze_palette[1])
 
 # Goal
 
@@ -266,7 +271,7 @@ ball_group = displayio.Group()
 ball_group.append(ball)
 ball_group.hidden = True
 
-group = displayio.Group(max_size=6)
+group = displayio.Group()
 group.append(maze_group)
 group.append(rect1)
 group.append(rect2)
@@ -425,7 +430,7 @@ while True:
             distances[1] = 12
 
     # South distance
-    if grid_y[0] < 5:
+    if grid_y[0] < HEIGHT_GRID-1:
         if local_x > 4:
             distances[2] = 3 - local_y
         else:
